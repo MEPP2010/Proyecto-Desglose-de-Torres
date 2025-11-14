@@ -1,0 +1,229 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Piece } from '@/lib/server';
+
+interface FilterOptions {
+  TIPO: string[];
+  FABRICANTE: string[];
+  CABEZA: string[];
+  CUERPO: string[];
+  PARTE_DIVISION: string[];
+  TRAMO: string[];
+}
+
+export default function BuscadorPage() {
+  const [filters, setFilters] = useState({
+    tipo: '',
+    fabricante: '',
+    cabeza: '',
+    parte: '',
+    cuerpo: '',
+    tramo: ''
+  });
+  
+  const [options, setOptions] = useState<FilterOptions>({
+    TIPO: [],
+    FABRICANTE: [],
+    CABEZA: [],
+    CUERPO: [],
+    PARTE_DIVISION: [],
+    TRAMO: []
+  });
+  
+  const [results, setResults] = useState<Piece[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('Esperando búsqueda... (Búsqueda exacta activada)');
+
+  useEffect(() => {
+    loadOptions();
+  }, []);
+
+  const loadOptions = async (changedFilter?: string) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.tipo) params.append('TIPO', filters.tipo);
+      if (filters.fabricante) params.append('FABRICANTE', filters.fabricante);
+      if (filters.cabeza) params.append('CABEZA', filters.cabeza);
+      if (filters.cuerpo) params.append('CUERPO', filters.cuerpo);
+      if (filters.tramo) params.append('TRAMO', filters.tramo);
+
+      const response = await fetch(`/api/options?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setOptions(data.options);
+      }
+    } catch (error) {
+      console.error('Error loading options:', error);
+    }
+  };
+
+  const handleFilterChange = (filterName: string, value: any) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('Buscando...');
+    
+    try {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+
+      const response = await fetch(`/api/search?${params}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setResults(data.results);
+        setMessage(`✅ Resultados encontrados: ${data.count} (Búsqueda exacta)`);
+      } else {
+        setMessage(`❌ Error: ${data.message}`);
+      }
+    } catch (error) {
+      setMessage(`🚨 Error de conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-4 sm:p-8">
+      <div className="container mx-auto max-w-7xl bg-white p-6 sm:p-10 rounded-xl shadow-2xl">
+        <div className="flex justify-between items-center mb-6 border-b-2 border-gray-200 pb-2">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#004d99]">
+            Buscador de Desglose de Torres 🔩
+          </h1>
+          <Link
+            href="/calculadora"
+            className="bg-indigo-600 text-white hover:bg-indigo-700 transition duration-150 ease-in-out font-semibold py-2 px-4 rounded-lg shadow-md flex items-center whitespace-nowrap text-sm sm:text-base"
+          >
+            <span className="mr-2 hidden sm:inline">➡️</span> Ir a Calculadora
+          </Link>
+        </div>
+
+        <form onSubmit={handleSearch}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <FilterSelect
+              label="TIPO:"
+              value={filters.tipo}
+              options={options.TIPO}
+              onChange={(v) => handleFilterChange('tipo', v)}
+              placeholder="Todos los Tipos"
+            />
+            <FilterSelect
+              label="FABRICANTE:"
+              value={filters.fabricante}
+              options={options.FABRICANTE}
+              onChange={(v) => handleFilterChange('fabricante', v)}
+              placeholder="Todos los Fabricantes"
+            />
+            <FilterSelect
+              label="CABEZA:"
+              value={filters.cabeza}
+              options={options.CABEZA}
+              onChange={(v) => handleFilterChange('cabeza', v)}
+              placeholder="Todas las Cabezas"
+            />
+            <FilterSelect
+              label="PARTE (DIVISIÓN):"
+              value={filters.parte}
+              options={options.PARTE_DIVISION}
+              onChange={(v) => handleFilterChange('parte', v)}
+              placeholder="Todas las Partes"
+            />
+            <FilterSelect
+              label="CUERPO:"
+              value={filters.cuerpo}
+              options={options.CUERPO}
+              onChange={(v) => handleFilterChange('cuerpo', v)}
+              placeholder="Todos los Cuerpos"
+            />
+            <FilterSelect
+              label="TRAMO:"
+              value={filters.tramo}
+              options={options.TRAMO}
+              onChange={(v) => handleFilterChange('tramo', v)}
+              placeholder="Todos los Tramos"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full sm:w-auto mt-2 py-3 px-6 bg-[#007bff] text-white font-bold rounded-md hover:bg-blue-600 transition duration-200 shadow-lg disabled:opacity-50"
+          >
+            🔍 Buscar Desglose
+          </button>
+        </form>
+
+        <p className="mt-8 font-semibold text-gray-600">{message}</p>
+
+        <div className="overflow-x-auto max-h-[60vh] overflow-y-auto mt-4 border border-gray-200 rounded-lg shadow-inner">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-100 sticky top-0 z-10">
+              <tr>
+                {['Material', 'Texto Breve', 'TIPO', 'FABRICANTE', 'CABEZA', 'PARTE(DIVISION)', 'CUERPO', 'TRAMO', 'Posición', 'Descripción', 'Long 2', 'Cantidad x Torre', 'Peso Unitario', 'PLANO', 'Mod Plano'].map(header => (
+                  <th key={header} className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {results.map((piece, idx) => (
+                <tr key={idx} className="hover:bg-gray-50 transition duration-100">
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.ID_ITEM || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.TEXTO_BREVE_DEL_MATERIAL || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.TIPO || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.FABRICANTE || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.CABEZA || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.PARTE_DIVISION || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.CUERPO || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.TRAMO || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.POSICION || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.DESCRIPCION || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.LONG_2_PRINCIPAL || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.CANTIDAD_X_TORRE || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">
+                    {piece.PESO_UNITARIO ? `${Number(piece.PESO_UNITARIO).toFixed(2)} kg` : '-'}
+                  </td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.PLANO || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.MOD_PLANO || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterSelect({ label, value, options, onChange, placeholder }: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="form-group">
+      <label className="block mb-1 font-semibold text-gray-700">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="p-2 border border-gray-300 rounded-md w-full focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="">{placeholder}</option>
+        {options.map(opt => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
