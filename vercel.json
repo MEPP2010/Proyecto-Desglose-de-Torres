@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "cd 'Proyecto Desglose de Torres nextjs' && npm run build",
+  "outputDirectory": "Proyecto Desglose de Torres nextjs/.next",
+  "framework": "nextjs"
+}
