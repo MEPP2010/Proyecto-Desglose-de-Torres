@@ -1,42 +1,49 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { MongoClient, Db, Collection } from 'mongodb';
 
-let db: Database.Database | null = null;
+let client: MongoClient | null = null;
+let db: Db | null = null;
 
-export function getDatabase() {
+export async function getDatabase() {
   if (!db) {
-    const dbPath = path.join(process.cwd(), 'desglose_torres.db');
-    db = new Database(dbPath);
-    db.pragma('journal_mode = WAL');
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI must be set');
+    }
+    
+    client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    db = client.db('torres');
   }
   return db;
 }
 
+export function getCollection(): Promise<Collection> {
+  return getDatabase().then(db => db.collection('piezas'));
+}
+
 export interface Piece {
-  ID_ITEM: string;
-  TEXTO_BREVE_DEL_MATERIAL: string;
-  TIPO: string;
-  FABRICANTE: string;
-  CABEZA: string;
-  PARTE_DIVISION: string;
-  CUERPO: string;
-  TRAMO: string;
-  POSICION: string;
-  DESCRIPCION: string;
-  LONG_2_PRINCIPAL: string;
-  CANTIDAD_X_TORRE: number;
-  PESO_UNITARIO: number;
-  PLANO: string;
-  MOD_PLANO: string;
+  id_item: string;
+  texto_breve: string;
+  tipo: string;
+  fabricante: string;
+  cabeza: string;
+  parte_division: string;
+  cuerpo: string;
+  tramo: string;
+  posicion: string;
+  descripcion: string;
+  long_2_principal: string;
+  cantidad_x_torre: number;
+  peso_unitario: number;
+  plano: string;
+  mod_plano: string;
 }
 
 export interface CalculatedPiece extends Piece {
-  CANTIDAD_ORIGINAL: number;
-  CANTIDAD_CALCULADA: number;
-  PESO_TOTAL: number;
+  cantidad_original: number;
+  cantidad_calculada: number;
+  peso_total: number;
 }
 
-// Conjuntos de partes para lógica especial
 export const PARTS_DIV_2 = new Set([
   'BGDA', 'BSUP', 'BMED', 'BINF', 'BDER', 'BIZQ', 'BSUP/MED'
 ]);
@@ -46,95 +53,99 @@ export const PARTS_DIV_4 = new Set([
   'PATA 4.5', 'PATA 6', 'PATA 6.0', 'PATA 7.5', 'PATA 9', 'PATA 9.0'
 ]);
 
-export function getOptions(filters: Record<string, string>) {
-  const db = getDatabase();
+export async function getOptions(filters: Record<string, string>) {
+  const collection = await getCollection();
   const options: Record<string, string[]> = {};
   
-  const fieldsToQuery = ['TIPO', 'FABRICANTE', 'CABEZA', 'CUERPO', 'PARTE_DIVISION', 'TRAMO'];
+  const fieldMap: Record<string, string> = {
+    TIPO: 'tipo',
+    FABRICANTE: 'fabricante',
+    CABEZA: 'cabeza',
+    CUERPO: 'cuerpo',
+    PARTE_DIVISION: 'parte_division',
+    TRAMO: 'tramo'
+  };
   
-  for (const field of fieldsToQuery) {
-    let query = `SELECT DISTINCT TRIM(${field}) as value FROM piezas WHERE ${field} IS NOT NULL AND TRIM(${field}) != ''`;
-    const params: string[] = [];
+  for (const [upperField, mongoField] of Object.entries(fieldMap)) {
+    const query: Record<string, any> = {};
     
-    for (const [filterField, filterValue] of Object.entries(filters)) {
-      if (filterValue && filterField !== field) {
-        query += ` AND ${filterField} = ?`;
-        params.push(filterValue);
+    // Agregar filtros existentes (excepto el campo actual)
+    for (const [filterKey, filterValue] of Object.entries(filters)) {
+      if (filterValue && filterKey !== upperField) {
+        const targetField = fieldMap[filterKey];
+        if (targetField) {
+          query[targetField] = filterValue;
+        }
       }
     }
     
-    query += ` ORDER BY ${field}`;
+    // Obtener valores únicos
+    const values = await collection.distinct(mongoField, {
+      ...query,
+      [mongoField]: { $ne: null, $ne: '' }
+    });
     
-    const stmt = db.prepare(query);
-    const results = stmt.all(...params) as { value: string }[];
-    options[field] = results.map(r => r.value);
+    options[upperField] = values
+      .filter(v => v && typeof v === 'string')
+      .map(v => v.trim())
+      .sort();
   }
   
   return options;
 }
 
-export function searchPieces(filters: Record<string, string>) {
-  const db = getDatabase();
-  let query = 'SELECT * FROM piezas WHERE 1=1';
-  const params: string[] = [];
+export async function searchPieces(filters: Record<string, string>) {
+  const collection = await getCollection();
+  const query: Record<string, any> = {};
   
   const filterMap: Record<string, string> = {
-    tipo: 'TIPO',
-    fabricante: 'FABRICANTE',
-    cabeza: 'CABEZA',
-    parte: 'PARTE_DIVISION',
-    cuerpo: 'CUERPO',
-    tramo: 'TRAMO'
+    tipo: 'tipo',
+    fabricante: 'fabricante',
+    cabeza: 'cabeza',
+    parte: 'parte_division',
+    cuerpo: 'cuerpo',
+    tramo: 'tramo'
   };
   
-  for (const [key, dbField] of Object.entries(filterMap)) {
+  for (const [key, mongoField] of Object.entries(filterMap)) {
     if (filters[key]) {
       if (key === 'tramo') {
-        query += ` AND TRIM(UPPER(${dbField})) = TRIM(UPPER(?))`;
+        // Búsqueda case-insensitive para tramo
+        query[mongoField] = new RegExp(`^${filters[key]}$`, 'i');
       } else {
-        query += ` AND ${dbField} = ?`;
+        query[mongoField] = filters[key];
       }
-      params.push(filters[key]);
     }
   }
   
-  query += ' LIMIT 500';
+  const pieces = await collection
+    .find(query)
+    .limit(500)
+    .toArray();
   
-  const stmt = db.prepare(query);
-  return stmt.all(...params) as Piece[];
+  return pieces as unknown as Piece[];
 }
 
-export function calculateMaterials(
+export async function calculateMaterials(
   filters: Record<string, string>,
   parts: Array<{ part: string; quantity: number }>
 ) {
-  const db = getDatabase();
-  let query = 'SELECT * FROM piezas WHERE 1=1';
-  const params: string[] = [];
+  const collection = await getCollection();
+  const query: Record<string, any> = {};
   
-  if (filters.tipo) {
-    query += ' AND TIPO = ?';
-    params.push(filters.tipo);
-  }
-  if (filters.fabricante) {
-    query += ' AND FABRICANTE = ?';
-    params.push(filters.fabricante);
-  }
-  if (filters.cabeza) {
-    query += ' AND CABEZA = ?';
-    params.push(filters.cabeza);
-  }
+  if (filters.tipo) query.tipo = filters.tipo;
+  if (filters.fabricante) query.fabricante = filters.fabricante;
+  if (filters.cabeza) query.cabeza = filters.cabeza;
   
-  const stmt = db.prepare(query);
-  const allPieces = stmt.all(...params) as Piece[];
-  
+  const allPieces = await collection.find(query).toArray();
   const calculatedPieces: CalculatedPiece[] = [];
   
   for (const piece of allPieces) {
-    const parteDiv = (piece.PARTE_DIVISION || '').trim().toUpperCase();
+    const pieceData = piece as unknown as Piece;
+    const parteDiv = (pieceData.parte_division || '').trim().toUpperCase();
     if (!parteDiv) continue;
     
-    const cantidadOriginal = Number(piece.CANTIDAD_X_TORRE) || 0;
+    const cantidadOriginal = Number(pieceData.cantidad_x_torre) || 0;
     let cantidadCalculada = 0;
     
     for (const selectedPart of parts) {
@@ -144,7 +155,6 @@ export function calculateMaterials(
       if (parteDiv === partName) {
         const isDivPart = PARTS_DIV_2.has(parteDiv) || PARTS_DIV_4.has(parteDiv);
         
-        // Validación: Si es una parte divisible PERO su cantidad original es 1, no dividir
         if (isDivPart && cantidadOriginal === 1) {
           cantidadCalculada += cantidadOriginal * partQty;
         } else if (PARTS_DIV_2.has(parteDiv)) {
@@ -158,20 +168,20 @@ export function calculateMaterials(
     }
     
     if (cantidadCalculada > 0) {
-      const pesoUnitario = Number(piece.PESO_UNITARIO) || 0;
+      const pesoUnitario = Number(pieceData.peso_unitario) || 0;
       const pesoTotal = cantidadCalculada * pesoUnitario;
       
       calculatedPieces.push({
-        ...piece,
-        CANTIDAD_ORIGINAL: cantidadOriginal,
-        CANTIDAD_CALCULADA: cantidadCalculada,
-        PESO_TOTAL: pesoTotal
+        ...pieceData,
+        cantidad_original: cantidadOriginal,
+        cantidad_calculada: cantidadCalculada,
+        peso_total: pesoTotal
       });
     }
   }
   
-  const totalPiezas = calculatedPieces.reduce((sum, p) => sum + p.CANTIDAD_CALCULADA, 0);
-  const totalPeso = calculatedPieces.reduce((sum, p) => sum + p.PESO_TOTAL, 0);
+  const totalPiezas = calculatedPieces.reduce((sum, p) => sum + p.cantidad_calculada, 0);
+  const totalPeso = calculatedPieces.reduce((sum, p) => sum + p.peso_total, 0);
   
   return {
     results: calculatedPieces,
