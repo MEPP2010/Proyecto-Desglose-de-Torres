@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       TRAMO: searchParams.get('TRAMO') || ''
     };
     
-    const options = getOptions(filters);
+    const options = await getOptions(filters);
     
     return NextResponse.json({
       success: true,

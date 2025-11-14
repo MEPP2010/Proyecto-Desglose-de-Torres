@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const result = calculateMaterials(filters, parts);
+    const result = await calculateMaterials(filters, parts);
     
     return NextResponse.json({
       success: true,

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       tramo: searchParams.get('tramo') || ''
     };
     
-    const pieces = searchPieces(filters);
+    const pieces = await searchPieces(filters);
     
     return NextResponse.json({
       success: true,
