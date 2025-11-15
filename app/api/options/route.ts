@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOptions } from '@/lib/server';
 
+
+export const dynamicParams = true;
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateMaterials } from '@/lib/server';
 
+
+export const dynamicParams = true;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
