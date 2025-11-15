@@ -82,7 +82,7 @@ export async function getOptions(filters: Record<string, string>) {
     // Obtener valores únicos
     const values = await collection.distinct(mongoField, {
       ...query,
-      [mongoField]: { $ne: null, $ne: '' }
+      [mongoField]: { $nin: [null, ''] }
     });
     
     options[upperField] = values

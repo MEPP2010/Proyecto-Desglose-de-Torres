@@ -177,23 +177,25 @@ export default function BuscadorPage() {
             <tbody className="divide-y divide-gray-200">
               {results.map((piece, idx) => (
                 <tr key={idx} className="hover:bg-gray-50 transition duration-100">
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.ID_ITEM || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.TEXTO_BREVE_DEL_MATERIAL || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.TIPO || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.FABRICANTE || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.CABEZA || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.PARTE_DIVISION || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.CUERPO || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.TRAMO || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.POSICION || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.DESCRIPCION || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.LONG_2_PRINCIPAL || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.CANTIDAD_X_TORRE || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.id_item || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.texto_breve || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.tipo || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.fabricante || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.cabeza || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.parte_division || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.cuerpo || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.tramo || '-'}</td>
+
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.posicion || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.descripcion || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.long_2_principal || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.cantidad_x_torre || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">
-                    {piece.PESO_UNITARIO ? `${Number(piece.PESO_UNITARIO).toFixed(2)} kg` : '-'}
+                    {piece.peso_unitario ? `${Number(piece.peso_unitario).toFixed(2)} kg` : '-'}
                   </td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.PLANO || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.MOD_PLANO || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.plano || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.mod_plano || '-'}</td>
+
                 </tr>
               ))}
             </tbody>
