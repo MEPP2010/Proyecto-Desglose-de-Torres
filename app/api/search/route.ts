@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchPieces } from '@/lib/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const searchParams = request.nextUrl.searchParams;
+    const {searchParams} = new URL(request.url);
     
     const filters: Record<string, string> = {
       tipo: searchParams.get('tipo') || '',
