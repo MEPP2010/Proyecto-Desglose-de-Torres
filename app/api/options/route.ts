@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOptions } from '@/lib/server';
 
+export async function GET(request: Request) {
+    const {searchParams} = new URL(request.url);
 
-export const dynamicParams = true;
-export async function GET(request: NextRequest) {
+    const query = searchParams.get('query');
   try {
-    const searchParams = request.nextUrl.searchParams;
-    
     const filters: Record<string, string> = {
       TIPO: searchParams.get('TIPO') || '',
       FABRICANTE: searchParams.get('FABRICANTE') || '',
