@@ -2,7 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { CalculatedPiece } from '@/lib/server';
+
+interface CalculatedPiece {
+  id_item: string;
+  descripcion: string;
+  parte_division: string;
+  posicion: string;
+  cantidad_original: number;
+  cantidad_calculada: number;
+  peso_unitario: number;
+  peso_total: number;
+  long_2_principal: string;
+}
 
 interface FilterOptions {
   TIPO: string[];
@@ -166,15 +177,15 @@ export default function CalculadoraPage() {
     
     results.forEach(piece => {
       const row = [
-        piece.ID_ITEM || '-',
-        piece.DESCRIPCION || '-',
-        piece.PARTE_DIVISION || '-',
-        piece.POSICION || '-',
-        piece.CANTIDAD_ORIGINAL,
-        piece.CANTIDAD_CALCULADA,
-        piece.PESO_UNITARIO.toFixed(2),
-        piece.PESO_TOTAL.toFixed(2),
-        piece.LONG_2_PRINCIPAL || '-'
+        piece.id_item || '-',
+        piece.descripcion || '-',
+        piece.parte_division || '-',
+        piece.posicion || '-',
+        piece.cantidad_original || 0,
+        piece.cantidad_calculada || 0,
+        (piece.peso_unitario || 0).toFixed(2),
+        (piece.peso_total || 0).toFixed(2),
+        piece.long_2_principal || '-'
       ].map(v => `"${v}"`).join(',');
       csv += row + '\n';
     });
@@ -272,17 +283,17 @@ export default function CalculadoraPage() {
                 <tbody>
                   {results.map((piece, idx) => (
                     <tr key={idx} className="border-b border-[#e9ecef] hover:bg-[#f8f9fa]">
-                      <td className="px-3 py-2">{piece.ID_ITEM || '-'}</td>
-                      <td className="px-3 py-2">{piece.DESCRIPCION || '-'}</td>
-                      <td className="px-3 py-2">{piece.PARTE_DIVISION || '-'}</td>
-                      <td className="px-3 py-2">{piece.POSICION || '-'}</td>
-                      <td className="px-3 py-2">{piece.CANTIDAD_ORIGINAL}</td>
+                      <td className="px-3 py-2">{piece.id_item || '-'}</td>
+                      <td className="px-3 py-2">{piece.descripcion || '-'}</td>
+                      <td className="px-3 py-2">{piece.parte_division || '-'}</td>
+                      <td className="px-3 py-2">{piece.posicion || '-'}</td>
+                      <td className="px-3 py-2">{piece.cantidad_original}</td>
                       <td className="px-3 py-2">
-                        <span className="bg-[#fff3cd] text-[#856404] font-bold px-2 py-1 rounded">{piece.CANTIDAD_CALCULADA}</span>
+                        <span className="bg-[#fff3cd] text-[#856404] font-bold px-2 py-1 rounded">{piece.cantidad_calculada}</span>
                       </td>
-                      <td className="px-3 py-2">{piece.PESO_UNITARIO.toFixed(2)}</td>
-                      <td className="px-3 py-2">{piece.PESO_TOTAL.toFixed(2)}</td>
-                      <td className="px-3 py-2">{piece.LONG_2_PRINCIPAL || '-'}</td>
+                      <td className="px-3 py-2">{piece.peso_unitario.toFixed(2)}</td>
+                      <td className="px-3 py-2">{piece.peso_total.toFixed(2)}</td>
+                      <td className="px-3 py-2">{piece.long_2_principal || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
