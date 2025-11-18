@@ -1,8 +1,26 @@
+// app/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Piece } from '@/lib/server';
+
+interface Piece {
+  id_item: string;
+  texto_breve: string;
+  tipo: string;
+  fabricante: string;
+  cabeza: string;
+  parte_division: string;
+  cuerpo: string;
+  tramo: string;
+  posicion: string;
+  descripcion: string;
+  long_2_principal: string;
+  cantidad_x_torre: number;
+  peso_unitario: number;
+  plano: string;
+  mod_plano: string;
+}
 
 interface FilterOptions {
   TIPO: string[];
@@ -36,9 +54,11 @@ export default function BuscadorPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('Esperando búsqueda... (Búsqueda exacta activada)');
 
+
   useEffect(() => {
     loadOptions();
-  }, []);
+  }, [filters.tipo, filters.fabricante, filters.cabeza, filters.cuerpo, filters.tramo]);
+  
 
   const loadOptions = async (changedFilter?: string) => {
     try {
@@ -61,7 +81,27 @@ export default function BuscadorPage() {
   };
 
   const handleFilterChange = (filterName: string, value: any) => {
-    setFilters(prev => ({ ...prev, [filterName]: value }));
+    let newFilters = { ...filters, [filterName]: value };
+
+    if (filterName === 'tipo') {
+      newFilters = { ...newFilters, fabricante: '', cabeza: '', parte: '', cuerpo: '', tramo: '' };
+    }
+    else if (filterName === 'fabricante') {
+      newFilters = { ...newFilters, tipo: '', cabeza: '', parte: '', cuerpo: '', tramo: '' };
+    }
+    else if (filterName === 'cabeza') {
+      newFilters = { ...newFilters, tipo: '', fabricante: '', parte: '', cuerpo: '', tramo: '' };
+    }
+    else if (filterName === 'parte') {
+      newFilters = { ...newFilters, tipo: '', fabricante: '', cabeza: '', cuerpo: '', tramo: '' };
+    }
+    else if (filterName === 'cuerpo') {
+      newFilters = { ...newFilters, tipo: '', fabricante: '', cabeza: '', parte: '',  tramo: '' };
+    }
+    else if (filterName === 'tramo') {
+      newFilters = { ...newFilters, tipo: '', fabricante: '', cabeza: '', parte: '', cuerpo: '' };
+    }
+    setFilters(newFilters); 
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -185,7 +225,6 @@ export default function BuscadorPage() {
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.parte_division || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.cuerpo || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.tramo || '-'}</td>
-
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.posicion || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.descripcion || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.long_2_principal || '-'}</td>
@@ -195,7 +234,6 @@ export default function BuscadorPage() {
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.plano || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.mod_plano || '-'}</td>
-
                 </tr>
               ))}
             </tbody>

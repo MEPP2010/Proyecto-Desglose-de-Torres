@@ -38,7 +38,22 @@ export interface Piece {
   mod_plano: string;
 }
 
-export interface CalculatedPiece extends Piece {
+export interface CalculatedPiece {
+  id_item: string;
+  texto_breve: string;
+  tipo: string;
+  fabricante: string;
+  cabeza: string;
+  parte_division: string;
+  cuerpo: string;
+  tramo: string;
+  posicion: string;
+  descripcion: string;
+  long_2_principal: string;
+  cantidad_x_torre: number;
+  peso_unitario: number;
+  plano: string;
+  mod_plano: string;
   cantidad_original: number;
   cantidad_calculada: number;
   peso_total: number;
@@ -172,7 +187,21 @@ export async function calculateMaterials(
       const pesoTotal = cantidadCalculada * pesoUnitario;
       
       calculatedPieces.push({
-        ...pieceData,
+        id_item: pieceData.id_item,
+        texto_breve: pieceData.texto_breve,
+        tipo: pieceData.tipo,
+        fabricante: pieceData.fabricante,
+        cabeza: pieceData.cabeza,
+        parte_division: pieceData.parte_division,
+        cuerpo: pieceData.cuerpo,
+        tramo: pieceData.tramo,
+        posicion: pieceData.posicion,
+        descripcion: pieceData.descripcion,
+        long_2_principal: pieceData.long_2_principal,
+        cantidad_x_torre: pieceData.cantidad_x_torre,
+        peso_unitario: pesoUnitario,
+        plano: pieceData.plano,
+        mod_plano: pieceData.mod_plano,
         cantidad_original: cantidadOriginal,
         cantidad_calculada: cantidadCalculada,
         peso_total: pesoTotal
