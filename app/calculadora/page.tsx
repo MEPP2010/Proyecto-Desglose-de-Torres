@@ -112,8 +112,14 @@ export default function CalculadoraPage() {
   };
 
   const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
-    setTimeout(() => loadOptions(), 0);
+    let newFilters = { ...filters, [field]: value };
+    if (field === 'tipo') {
+      newFilters = { ...newFilters, fabricante: '', cabeza: '' };
+    } else if (field === 'fabricante') {
+      newFilters = { ...newFilters, cabeza: '' };
+    }
+    
+    setFilters(newFilters);
   };
 
   const togglePart = (partName: string) => {
