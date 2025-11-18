@@ -87,19 +87,7 @@ export default function BuscadorPage() {
       newFilters = { ...newFilters, fabricante: '', cabeza: '', parte: '', cuerpo: '', tramo: '' };
     }
     else if (filterName === 'fabricante') {
-      newFilters = { ...newFilters, tipo: '', cabeza: '', parte: '', cuerpo: '', tramo: '' };
-    }
-    else if (filterName === 'cabeza') {
-      newFilters = { ...newFilters, tipo: '', fabricante: '', parte: '', cuerpo: '', tramo: '' };
-    }
-    else if (filterName === 'parte') {
-      newFilters = { ...newFilters, tipo: '', fabricante: '', cabeza: '', cuerpo: '', tramo: '' };
-    }
-    else if (filterName === 'cuerpo') {
-      newFilters = { ...newFilters, tipo: '', fabricante: '', cabeza: '', parte: '',  tramo: '' };
-    }
-    else if (filterName === 'tramo') {
-      newFilters = { ...newFilters, tipo: '', fabricante: '', cabeza: '', parte: '', cuerpo: '' };
+      newFilters = { ...newFilters, cabeza: '', parte: '', cuerpo: '', tramo: '' };
     }
     setFilters(newFilters); 
   };
