@@ -6,9 +6,9 @@ node_modules/
 
 # Scripts y archivos temporales
 csv-mongodb.py
-clean-json.js
+clean-json-file.js
 migrate-to-mongodb.js
-import-json-to-mongodb.js
+import-json-mongodb.js
 
 # Archivos de datos
 DATOS_CONSOLIDADOS_TORRES.csv
