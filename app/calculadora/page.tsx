@@ -51,7 +51,7 @@ export default function CalculadoraPage() {
 
   useEffect(() => {
     loadOptions();
-  }, []);
+  }, [filters.tipo, filters.fabricante, filters.cabeza]);
 
   useEffect(() => {
     if (!filters.tipo || !filters.fabricante) {
@@ -76,6 +76,23 @@ export default function CalculadoraPage() {
       
       if (data.success) {
         setOptions(data.options);
+
+        if (data.options.PARTE_DIVISION && data.options.PARTE_DIVISION.length > 0) {
+        const newParts: Record<string, SelectedPart> = {};
+        data.options.PARTE_DIVISION.forEach((partName: string) => {
+          // Mantener la cantidad de la parte si ya estaba seleccionada, o usar 1 si es nueva.
+          const existingPart = parts[partName]; 
+          newParts[partName] = {
+            part: partName,
+            quantity: existingPart ? existingPart.quantity : 1, // Mantener cantidad si existe
+            selected: existingPart ? existingPart.selected : false // Mantener estado de selección si existe
+          };
+        });
+        setParts(newParts);
+      } else {
+        // Si no hay partes, asegúrate de que el estado `parts` esté vacío
+        setParts({}); 
+      }
         
         if (filters.tipo && filters.fabricante && data.options.PARTE_DIVISION) {
           const newParts: Record<string, SelectedPart> = {};
