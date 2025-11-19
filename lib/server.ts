@@ -146,21 +146,21 @@ export async function searchPieces(filters: Record<string, string>) {
     .limit(500)
     .toArray();
   
-  console.log(`  📦 Piezas devueltas (limitadas a 500): ${pieces.length}`);
+  
   
   if (pieces.length > 0) {
     console.log('  🔍 Ejemplo del primer documento:', {
-      ID_Item: pieces[0].ID_Item,
+      ID_Item: pieces[0]['ID Item'],
       TIPO: pieces[0].TIPO,
       FABRICANTE: pieces[0].FABRICANTE,
       'Parte (Division)': pieces[0]['Parte (Division)'],
-      Cantidad_x_Torre: pieces[0].Cantidad_x_Torre
+      Cantidad_x_Torre: pieces[0]['Cantidad x Torre']
     });
   }
   
   const result = pieces.map(p => ({
-    id_item: p.ID_Item || '-',
-    texto_breve: p.Texto_breve_del_material || '-',
+    id_item: p['ID Item'] || '-',
+    texto_breve: p['Texto breve del material'] || '-',
     tipo: p.TIPO || '-',
     fabricante: p.FABRICANTE || '-',
     cabeza: p.Cabeza || '-',
@@ -170,10 +170,10 @@ export async function searchPieces(filters: Record<string, string>) {
     posicion: p.Posición || '-',
     descripcion: p.Descripción || '-',
     long_2_principal: p['Long 2 (Principal)'] || '-',
-    cantidad_x_torre: p.Cantidad_x_Torre || 0,
-    peso_unitario: p.Peso_Unitario || 0,
+    cantidad_x_torre: p['Cantidad x Torre'] || 0,
+    peso_unitario: p['Peso Unitario'] || 0,
     plano: p.PLANO || '-',
-    mod_plano: p.mod_plano || '-'
+    mod_plano: p['Mod Plano'] || '-'
   })) as unknown as Piece[];
   
   console.log(`  ✅ Resultado final: ${result.length} piezas transformadas\n`);
@@ -185,9 +185,6 @@ export async function calculateMaterials(
   filters: Record<string, string>,
   parts: Array<{ part: string; quantity: number }>
 ) {
-  console.log('\n🧮 calculateMaterials - Inicio');
-  console.log('  📋 Filtros:', filters);
-  console.log('  🗝️ Partes seleccionadas:', parts);
   
   const collection = await getCollection();
   const query: Record<string, any> = {};
@@ -196,20 +193,14 @@ export async function calculateMaterials(
   if (filters.fabricante) query.FABRICANTE = filters.fabricante;
   if (filters.cabeza) query.Cabeza = filters.cabeza;
   
-  console.log('  📝 Query MongoDB:', query);
-  
   // Contar documentos antes de obtenerlos
   const matchingDocs = await collection.countDocuments(query);
-  console.log(`  📊 Documentos que coinciden en DB: ${matchingDocs}`);
   
   const allPieces = await collection.find(query).toArray();
-  console.log(`  📦 Total de piezas obtenidas: ${allPieces.length}`);
+ 
   
   // Verificar las partes únicas en los datos
   const uniqueParts = new Set(allPieces.map(p => p['Parte (Division)']).filter(Boolean));
-  console.log(`  🎯 Partes únicas encontradas en DB: ${uniqueParts.size}`);
-  console.log('  📝 Partes:', Array.from(uniqueParts).sort());
-  
   const calculatedPieces: CalculatedPiece[] = [];
   let piecesProcessed = 0;
   let piecesWithCalculation = 0;
@@ -219,7 +210,7 @@ export async function calculateMaterials(
     const parteDiv = (piece['Parte (Division)'] || '').trim().toUpperCase();
     if (!parteDiv) continue;
     
-    const cantidadOriginal = Number(piece.Cantidad_x_Torre) || 0;
+    const cantidadOriginal = Number(piece['Cantidad x Torre']) || 0;
     let cantidadCalculada = 0;
     
     for (const selectedPart of parts) {
@@ -243,11 +234,11 @@ export async function calculateMaterials(
     
     if (cantidadCalculada > 0) {
       piecesWithCalculation++;
-      const pesoUnitario = Number(piece.Peso_Unitario) || 0;
+      const pesoUnitario = Number(piece['Peso Unitario']) || 0;
       const pesoTotal = cantidadCalculada * pesoUnitario;
       
       calculatedPieces.push({
-        id_item: piece.ID_Item || '-',
+        id_item: piece['ID Item'] || '-',
         descripcion: piece.Descripción || '-',
         parte_division: piece['Parte (Division)'] || '-',
         posicion: piece.Posición || '-',
@@ -260,15 +251,8 @@ export async function calculateMaterials(
     }
   }
   
-  console.log(`  ⚙️ Piezas procesadas: ${piecesProcessed}`);
-  console.log(`  ✅ Piezas con cálculo > 0: ${piecesWithCalculation}`);
-  
   const totalPiezas = calculatedPieces.reduce((sum, p) => sum + p.cantidad_calculada, 0);
   const totalPeso = calculatedPieces.reduce((sum, p) => sum + p.peso_total, 0);
-  
-  console.log(`  📊 Total piezas calculadas: ${totalPiezas}`);
-  console.log(`  ⚖️ Peso total: ${totalPeso.toFixed(2)} kg`);
-  console.log('  ✅ calculateMaterials - Fin\n');
   
   return {
     results: calculatedPieces,

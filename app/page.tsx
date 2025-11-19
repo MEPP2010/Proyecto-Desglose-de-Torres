@@ -5,8 +5,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 interface Piece {
-  ID_Item: string;
-  Texto_breve_del_material: string;
+  id_item: string;
+  texto_breve: string;
   tipo: string;
   fabricante: string;
   cabeza: string;
@@ -16,8 +16,8 @@ interface Piece {
   posicion: string;
   descripcion: string;
   long_2_principal: string;
-  Cantidad_x_Torre: number;
-  Peso_Unitario: number;
+  cantidad_x_torre: number;
+  peso_unitario: number;
   plano: string;
   mod_plano: string;
 }
@@ -205,8 +205,8 @@ export default function BuscadorPage() {
             <tbody className="divide-y divide-gray-200">
               {results.map((piece, idx) => (
                 <tr key={idx} className="hover:bg-gray-50 transition duration-100">
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.ID_Item || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.Texto_breve_del_material || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.id_item || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.texto_breve || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.tipo || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.fabricante || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.cabeza || '-'}</td>
@@ -216,9 +216,9 @@ export default function BuscadorPage() {
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.posicion || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.descripcion || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.long_2_principal || '-'}</td>
-                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.Cantidad_x_Torre || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.cantidad_x_torre || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">
-                    {piece.Peso_Unitario ? `${Number(piece.Peso_Unitario).toFixed(2)} kg` : '-'}
+                    {piece.peso_unitario ? `${Number(piece.peso_unitario).toFixed(2)} kg` : '-'}
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.plano || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.mod_plano || '-'}</td>
