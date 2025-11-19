@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-
+import PlanoViewer, { usePlanoViewer } from '@/components/PlanoViewer';
 
 interface Piece {
   id_item: string;
@@ -55,13 +55,14 @@ export default function BuscadorPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('Esperando búsqueda... (Búsqueda exacta activada)');
 
+  // Hook para el visualizador de planos
+  const { isOpen, planoUrl, planoName, openViewer, closeViewer } = usePlanoViewer();
 
   useEffect(() => {
     loadOptions();
   }, [filters.tipo, filters.fabricante, filters.cabeza, filters.cuerpo, filters.tramo]);
-  
 
-  const loadOptions = async (changedFilter?: string) => {
+  const loadOptions = async () => {
     try {
       const params = new URLSearchParams();
       if (filters.tipo) params.append('TIPO', filters.tipo);
@@ -118,6 +119,20 @@ export default function BuscadorPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewPlano = (plano: string, modPlano: string, itemId: string) => {
+    if (!plano || plano === '-') {
+      alert('⚠️ Este ítem no tiene un plano asociado');
+      return;
+    }
+    
+    // Aquí debes construir la URL real de tu plano
+    // Por ejemplo, si los planos están en /public/planos/ o en un CDN
+    const planoUrl = `/planos/${plano}.jpg`;
+    const planoTitle = `${itemId} - ${plano}${modPlano && modPlano !== '-' ? ` (Mod: ${modPlano})` : ''}`;
+    
+    openViewer(planoUrl, planoTitle);
   };
 
   return (
@@ -196,8 +211,8 @@ export default function BuscadorPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
-                {['Material', 'Texto Breve', 'TIPO', 'FABRICANTE', 'CABEZA', 'PARTE(DIVISION)', 'CUERPO', 'TRAMO', 'Posición', 'Descripción', 'Long 2', 'Cantidad x Torre', 'Peso Unitario', 'PLANO', 'Mod Plano'].map(header => (
-                  <th key={header} className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                {['Material', 'Texto Breve', 'TIPO', 'FABRICANTE', 'CABEZA', 'PARTE(DIVISION)', 'CUERPO', 'TRAMO', 'Posición', 'Descripción', 'Long 2', 'Cantidad x Torre', 'Peso Unitario', 'PLANO', 'Mod Plano', 'Ver Plano'].map(header => (
+                  <th key={header} className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">
                     {header}
                   </th>
                 ))}
@@ -223,12 +238,34 @@ export default function BuscadorPage() {
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.plano || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.mod_plano || '-'}</td>
+                  <td className="px-6 py-3 whitespace-nowrap text-sm">
+                    {piece.plano && piece.plano !== '-' ? (
+                      <button
+                        onClick={() => handleViewPlano(piece.plano, piece.mod_plano, piece.id_item)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-semibold transition"
+                        title="Ver plano"
+                      >
+                        📐 Ver
+                      </button>
+                    ) : (
+                      <span className="text-gray-400 text-xs">N/A</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Visualizador de Planos */}
+      {isOpen && (
+        <PlanoViewer
+          planoUrl={planoUrl}
+          planoName={planoName}
+          onClose={closeViewer}
+        />
+      )}
     </div>
   );
 }

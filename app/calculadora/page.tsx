@@ -1,7 +1,9 @@
+// app/calculadora/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import PlanoViewer, { usePlanoViewer } from '@/components/PlanoViewer';
 
 interface CalculatedPiece {
   id_item: string;
@@ -14,6 +16,8 @@ interface CalculatedPiece {
   peso_unitario: number;
   peso_total: number;
   long_2_principal: string;
+  plano: string;
+  mod_plano: string;
 }
 
 interface FilterOptions {
@@ -50,6 +54,9 @@ export default function CalculadoraPage() {
   const [message, setMessage] = useState('');
   const [partsMessage, setPartsMessage] = useState('Selecciona TIPO y FABRICANTE para ver las partes disponibles...');
 
+  // Hook para el visualizador de planos
+  const { isOpen, planoUrl, planoName, openViewer, closeViewer } = usePlanoViewer();
+
   useEffect(() => {
     loadOptions();
   }, [filters.tipo, filters.fabricante, filters.cabeza]);
@@ -79,32 +86,18 @@ export default function CalculadoraPage() {
         setOptions(data.options);
 
         if (data.options.PARTE_DIVISION && data.options.PARTE_DIVISION.length > 0) {
-        const newParts: Record<string, SelectedPart> = {};
-        data.options.PARTE_DIVISION.forEach((partName: string) => {
-          // Mantener la cantidad de la parte si ya estaba seleccionada, o usar 1 si es nueva.
-          const existingPart = parts[partName]; 
-          newParts[partName] = {
-            part: partName,
-            quantity: existingPart ? existingPart.quantity : 1, // Mantener cantidad si existe
-            selected: existingPart ? existingPart.selected : false // Mantener estado de selección si existe
-          };
-        });
-        setParts(newParts);
-      } else {
-        // Si no hay partes, asegúrate de que el estado `parts` esté vacío
-        setParts({}); 
-      }
-        
-        if (filters.tipo && filters.fabricante && data.options.PARTE_DIVISION) {
           const newParts: Record<string, SelectedPart> = {};
           data.options.PARTE_DIVISION.forEach((partName: string) => {
+            const existingPart = parts[partName]; 
             newParts[partName] = {
               part: partName,
-              quantity: 1,
-              selected: false
+              quantity: existingPart ? existingPart.quantity : 1,
+              selected: existingPart ? existingPart.selected : false
             };
           });
           setParts(newParts);
+        } else {
+          setParts({}); 
         }
       }
     } catch (error) {
@@ -197,7 +190,7 @@ export default function CalculadoraPage() {
       return;
     }
 
-    let csv = 'Material,Descripción,Parte,Posición,Cant. Original,Cant. Calculada,Peso Unit.,Peso Total,Long 2\n';
+    let csv = 'Material,Descripción,Parte,Posición,Cant. Original,Cant. Calculada,Peso Unit.,Peso Total,Long 2,Plano,Mod Plano\n';
     
     results.forEach(piece => {
       const row = [
@@ -210,7 +203,9 @@ export default function CalculadoraPage() {
         piece.cantidad_calculada || 0,
         (piece.peso_unitario || 0).toFixed(2),
         (piece.peso_total || 0).toFixed(2),
-        piece.long_2_principal || '-'
+        piece.long_2_principal || '-',
+        piece.plano || '-',
+        piece.mod_plano || '-'
       ].map(v => `"${v}"`).join(',');
       csv += row + '\n';
     });
@@ -225,6 +220,18 @@ export default function CalculadoraPage() {
 
   const showModal = (msg: string) => {
     alert(msg);
+  };
+
+  const handleViewPlano = (plano: string | undefined, modPlano: string | undefined, itemId: string) => {
+    if (!plano || plano === '-') {
+      alert('⚠️ Este ítem no tiene un plano asociado');
+      return;
+    }
+    
+    const planoUrl = `/planos/${plano}`;
+    const planoTitle = `${itemId} - ${plano}${modPlano && modPlano !== '-' ? ` (Mod: ${modPlano})` : ''}`;
+    
+    openViewer(planoUrl, planoTitle);
   };
 
   return (
@@ -300,8 +307,8 @@ export default function CalculadoraPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white sticky top-0 z-10">
                   <tr>
-                    {['Material', 'Texto Breve', 'Descripción', 'Parte', 'Posición', 'Cant. Original', 'Cant. Calculada', 'Peso Unit. (kg)', 'Peso Total (kg)', 'Long 2'].map(h => (
-                      <th key={h} className="px-3 py-3 text-left font-semibold">{h}</th>
+                    {['Material', 'Texto Breve', 'Descripción', 'Parte', 'Posición', 'Cant. Original', 'Cant. Calculada', 'Peso Unit. (kg)', 'Peso Total (kg)', 'Long 2', 'Ver Plano'].map(h => (
+                      <th key={h} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -320,6 +327,19 @@ export default function CalculadoraPage() {
                       <td className="px-3 py-2">{piece.peso_unitario.toFixed(2)}</td>
                       <td className="px-3 py-2">{piece.peso_total.toFixed(2)}</td>
                       <td className="px-3 py-2">{piece.long_2_principal || '-'}</td>
+                      <td className="px-3 py-2">
+                        {piece.plano && piece.plano !== '-' ? (
+                          <button
+                            onClick={() => handleViewPlano(piece.plano, piece.mod_plano, piece.id_item)}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-semibold transition"
+                            title="Ver plano"
+                          >
+                            📐 Ver
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -335,6 +355,15 @@ export default function CalculadoraPage() {
           </div>
         )}
       </div>
+
+      {/* Visualizador de Planos */}
+      {isOpen && (
+        <PlanoViewer
+          planoUrl={planoUrl}
+          planoName={planoName}
+          onClose={closeViewer}
+        />
+      )}
     </div>
   );
 }

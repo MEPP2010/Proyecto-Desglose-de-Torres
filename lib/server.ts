@@ -50,6 +50,8 @@ export interface CalculatedPiece {
   peso_unitario: number;
   peso_total: number;
   long_2_principal: string;
+  plano: string;
+  mod_plano: string;
 }
 
 export const PARTS_DIV_2 = new Set([
@@ -248,7 +250,9 @@ export async function calculateMaterials(
         cantidad_calculada: cantidadCalculada,
         peso_unitario: pesoUnitario,
         peso_total: pesoTotal,
-        long_2_principal: piece['Long 2 (Principal)'] || '-'
+        long_2_principal: piece['Long 2 (Principal)'] || '-',
+        plano: piece.PLANO || '-',
+        mod_plano: piece['Mod Plano'] || '-'
       });
     }
   }
