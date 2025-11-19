@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { searchPieces } from '@/lib/server';
 
 export async function GET(request: Request) {
+  console.log('\n🌐 API /api/search - REQUEST');
+  
   try {
     const {searchParams} = new URL(request.url);
     
@@ -16,7 +18,11 @@ export async function GET(request: Request) {
       tramo: searchParams.get('tramo') || ''
     };
     
+    console.log('📥 Filtros de búsqueda:', filters);
+    
     const pieces = await searchPieces(filters);
+    
+    console.log(`✅ API /api/search - RESPONSE: ${pieces.length} piezas\n`);
     
     return NextResponse.json({
       success: true,
@@ -24,7 +30,7 @@ export async function GET(request: Request) {
       results: pieces
     });
   } catch (error) {
-    console.error('Error en la búsqueda:', error);
+    console.error('❌ API /api/search - ERROR:', error);
     return NextResponse.json(
       {
         success: false,
