@@ -12,6 +12,7 @@ export async function getDatabase() {
     client = new MongoClient(process.env.MONGODB_URI);
     await client.connect();
     db = client.db('torres');
+    console.log('✅ Conectado a MongoDB');
   }
   return db;
 }
@@ -60,6 +61,8 @@ export const PARTS_DIV_4 = new Set([
 ]);
 
 export async function getOptions(filters: Record<string, string>) {
+  console.log('\n🔍 getOptions - Filtros recibidos:', filters);
+  
   const collection = await getCollection();
   const options: Record<string, string[]> = {};
   
@@ -84,6 +87,8 @@ export async function getOptions(filters: Record<string, string>) {
       }
     }
     
+    console.log(`  📋 Obteniendo opciones para ${upperField} con query:`, query);
+    
     const values = await collection.distinct(mongoField, {
       ...query,
       [mongoField]: { $nin: [null, ''] }
@@ -93,12 +98,17 @@ export async function getOptions(filters: Record<string, string>) {
       .filter(v => v && typeof v === 'string')
       .map(v => v.trim())
       .sort();
+    
+    console.log(`  ✅ ${upperField}: ${options[upperField].length} opciones encontradas`);
   }
   
+  console.log('📊 Total de opciones por campo:', Object.entries(options).map(([k, v]) => `${k}: ${v.length}`).join(', '));
   return options;
 }
 
 export async function searchPieces(filters: Record<string, string>) {
+  console.log('\n🔎 searchPieces - Filtros recibidos:', filters);
+  
   const collection = await getCollection();
   const query: Record<string, any> = {};
   
@@ -121,12 +131,34 @@ export async function searchPieces(filters: Record<string, string>) {
     }
   }
   
+  console.log('  📝 Query construido para MongoDB:', JSON.stringify(query, null, 2));
+  
+  // Primero contamos cuántos documentos hay en total en la colección
+  const totalDocs = await collection.countDocuments();
+  console.log(`  📚 Total de documentos en la colección: ${totalDocs}`);
+  
+  // Contamos cuántos documentos coinciden con el query
+  const matchingDocs = await collection.countDocuments(query);
+  console.log(`  ✅ Documentos que coinciden con el query: ${matchingDocs}`);
+  
   const pieces = await collection
     .find(query)
     .limit(500)
     .toArray();
   
-  return pieces.map(p => ({
+  console.log(`  📦 Piezas devueltas (limitadas a 500): ${pieces.length}`);
+  
+  if (pieces.length > 0) {
+    console.log('  🔍 Ejemplo del primer documento:', {
+      ID_Item: pieces[0].ID_Item,
+      TIPO: pieces[0].TIPO,
+      FABRICANTE: pieces[0].FABRICANTE,
+      'Parte (Division)': pieces[0]['Parte (Division)'],
+      Cantidad_x_Torre: pieces[0].Cantidad_x_Torre
+    });
+  }
+  
+  const result = pieces.map(p => ({
     id_item: p.ID_Item || '-',
     texto_breve: p.Texto_breve_del_material || '-',
     tipo: p.TIPO || '-',
@@ -143,12 +175,20 @@ export async function searchPieces(filters: Record<string, string>) {
     plano: p.PLANO || '-',
     mod_plano: p.mod_plano || '-'
   })) as unknown as Piece[];
+  
+  console.log(`  ✅ Resultado final: ${result.length} piezas transformadas\n`);
+  
+  return result;
 }
 
 export async function calculateMaterials(
   filters: Record<string, string>,
   parts: Array<{ part: string; quantity: number }>
 ) {
+  console.log('\n🧮 calculateMaterials - Inicio');
+  console.log('  📋 Filtros:', filters);
+  console.log('  🗝️ Partes seleccionadas:', parts);
+  
   const collection = await getCollection();
   const query: Record<string, any> = {};
   
@@ -156,10 +196,26 @@ export async function calculateMaterials(
   if (filters.fabricante) query.FABRICANTE = filters.fabricante;
   if (filters.cabeza) query.Cabeza = filters.cabeza;
   
+  console.log('  📝 Query MongoDB:', query);
+  
+  // Contar documentos antes de obtenerlos
+  const matchingDocs = await collection.countDocuments(query);
+  console.log(`  📊 Documentos que coinciden en DB: ${matchingDocs}`);
+  
   const allPieces = await collection.find(query).toArray();
+  console.log(`  📦 Total de piezas obtenidas: ${allPieces.length}`);
+  
+  // Verificar las partes únicas en los datos
+  const uniqueParts = new Set(allPieces.map(p => p['Parte (Division)']).filter(Boolean));
+  console.log(`  🎯 Partes únicas encontradas en DB: ${uniqueParts.size}`);
+  console.log('  📝 Partes:', Array.from(uniqueParts).sort());
+  
   const calculatedPieces: CalculatedPiece[] = [];
+  let piecesProcessed = 0;
+  let piecesWithCalculation = 0;
   
   for (const piece of allPieces) {
+    piecesProcessed++;
     const parteDiv = (piece['Parte (Division)'] || '').trim().toUpperCase();
     if (!parteDiv) continue;
     
@@ -186,6 +242,7 @@ export async function calculateMaterials(
     }
     
     if (cantidadCalculada > 0) {
+      piecesWithCalculation++;
       const pesoUnitario = Number(piece.Peso_Unitario) || 0;
       const pesoTotal = cantidadCalculada * pesoUnitario;
       
@@ -203,8 +260,15 @@ export async function calculateMaterials(
     }
   }
   
+  console.log(`  ⚙️ Piezas procesadas: ${piecesProcessed}`);
+  console.log(`  ✅ Piezas con cálculo > 0: ${piecesWithCalculation}`);
+  
   const totalPiezas = calculatedPieces.reduce((sum, p) => sum + p.cantidad_calculada, 0);
   const totalPeso = calculatedPieces.reduce((sum, p) => sum + p.peso_total, 0);
+  
+  console.log(`  📊 Total piezas calculadas: ${totalPiezas}`);
+  console.log(`  ⚖️ Peso total: ${totalPeso.toFixed(2)} kg`);
+  console.log('  ✅ calculateMaterials - Fin\n');
   
   return {
     results: calculatedPieces,
