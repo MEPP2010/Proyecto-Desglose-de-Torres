@@ -12,6 +12,7 @@ import-json-mongodb.js
 
 # Archivos de datos
 DATOS_CONSOLIDADOS_TORRES.csv
+PROYECTO_DESGLOSE_TORRES_martin.xlsx
 desgloses_mongodb.json
 desgloses_mongodb_clean.json
 desglose_torres.db.backup
