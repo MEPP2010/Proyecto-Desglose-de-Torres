@@ -40,23 +40,14 @@ export interface Piece {
 
 export interface CalculatedPiece {
   id_item: string;
-  texto_breve: string;
-  tipo: string;
-  fabricante: string;
-  cabeza: string;
-  parte_division: string;
-  cuerpo: string;
-  tramo: string;
-  posicion: string;
   descripcion: string;
-  long_2_principal: string;
-  cantidad_x_torre: number;
-  peso_unitario: number;
-  plano: string;
-  mod_plano: string;
+  parte_division: string;
+  posicion: string;
   cantidad_original: number;
   cantidad_calculada: number;
+  peso_unitario: number;
   peso_total: number;
+  long_2_principal: string;
 }
 
 export const PARTS_DIV_2 = new Set([
@@ -73,18 +64,17 @@ export async function getOptions(filters: Record<string, string>) {
   const options: Record<string, string[]> = {};
   
   const fieldMap: Record<string, string> = {
-    TIPO: 'tipo',
-    FABRICANTE: 'fabricante',
-    CABEZA: 'cabeza',
-    CUERPO: 'cuerpo',
-    PARTE_DIVISION: 'parte_division',
-    TRAMO: 'tramo'
+    TIPO: 'TIPO',
+    FABRICANTE: 'FABRICANTE',
+    CABEZA: 'Cabeza',
+    CUERPO: 'Cuerpo',
+    PARTE_DIVISION: 'Parte (Division)',
+    TRAMO: 'Tramo'
   };
   
   for (const [upperField, mongoField] of Object.entries(fieldMap)) {
     const query: Record<string, any> = {};
     
-    // Agregar filtros existentes (excepto el campo actual)
     for (const [filterKey, filterValue] of Object.entries(filters)) {
       if (filterValue && filterKey !== upperField) {
         const targetField = fieldMap[filterKey];
@@ -94,7 +84,6 @@ export async function getOptions(filters: Record<string, string>) {
       }
     }
     
-    // Obtener valores únicos
     const values = await collection.distinct(mongoField, {
       ...query,
       [mongoField]: { $nin: [null, ''] }
@@ -114,18 +103,17 @@ export async function searchPieces(filters: Record<string, string>) {
   const query: Record<string, any> = {};
   
   const filterMap: Record<string, string> = {
-    tipo: 'tipo',
-    fabricante: 'fabricante',
-    cabeza: 'cabeza',
-    parte: 'parte_division',
-    cuerpo: 'cuerpo',
-    tramo: 'tramo'
+    tipo: 'TIPO',
+    fabricante: 'FABRICANTE',
+    cabeza: 'Cabeza',
+    parte: 'Parte (Division)',
+    cuerpo: 'Cuerpo',
+    tramo: 'Tramo'
   };
   
   for (const [key, mongoField] of Object.entries(filterMap)) {
     if (filters[key]) {
       if (key === 'tramo') {
-        // Búsqueda case-insensitive para tramo
         query[mongoField] = new RegExp(`^${filters[key]}$`, 'i');
       } else {
         query[mongoField] = filters[key];
@@ -138,7 +126,23 @@ export async function searchPieces(filters: Record<string, string>) {
     .limit(500)
     .toArray();
   
-  return pieces as unknown as Piece[];
+  return pieces.map(p => ({
+    id_item: p.ID_Item || '-',
+    texto_breve: p.Texto_breve_del_material || '-',
+    tipo: p.TIPO || '-',
+    fabricante: p.FABRICANTE || '-',
+    cabeza: p.Cabeza || '-',
+    parte_division: p['Parte (Division)'] || '-',
+    cuerpo: p.Cuerpo || '-',
+    tramo: p.Tramo || '-',
+    posicion: p.Posición || '-',
+    descripcion: p.Descripción || '-',
+    long_2_principal: p['Long 2 (Principal)'] || '-',
+    cantidad_x_torre: p.Cantidad_x_Torre || 0,
+    peso_unitario: p.Peso_Unitario || 0,
+    plano: p.PLANO || '-',
+    mod_plano: p.mod_plano || '-'
+  })) as unknown as Piece[];
 }
 
 export async function calculateMaterials(
@@ -148,19 +152,18 @@ export async function calculateMaterials(
   const collection = await getCollection();
   const query: Record<string, any> = {};
   
-  if (filters.tipo) query.tipo = filters.tipo;
-  if (filters.fabricante) query.fabricante = filters.fabricante;
-  if (filters.cabeza) query.cabeza = filters.cabeza;
+  if (filters.tipo) query.TIPO = filters.tipo;
+  if (filters.fabricante) query.FABRICANTE = filters.fabricante;
+  if (filters.cabeza) query.Cabeza = filters.cabeza;
   
   const allPieces = await collection.find(query).toArray();
   const calculatedPieces: CalculatedPiece[] = [];
   
   for (const piece of allPieces) {
-    const pieceData = piece as unknown as Piece;
-    const parteDiv = (pieceData.parte_division || '').trim().toUpperCase();
+    const parteDiv = (piece['Parte (Division)'] || '').trim().toUpperCase();
     if (!parteDiv) continue;
     
-    const cantidadOriginal = Number(pieceData.cantidad_x_torre) || 0;
+    const cantidadOriginal = Number(piece.Cantidad_x_Torre) || 0;
     let cantidadCalculada = 0;
     
     for (const selectedPart of parts) {
@@ -183,28 +186,19 @@ export async function calculateMaterials(
     }
     
     if (cantidadCalculada > 0) {
-      const pesoUnitario = Number(pieceData.peso_unitario) || 0;
+      const pesoUnitario = Number(piece.Peso_Unitario) || 0;
       const pesoTotal = cantidadCalculada * pesoUnitario;
       
       calculatedPieces.push({
-        id_item: pieceData.id_item,
-        texto_breve: pieceData.texto_breve,
-        tipo: pieceData.tipo,
-        fabricante: pieceData.fabricante,
-        cabeza: pieceData.cabeza,
-        parte_division: pieceData.parte_division,
-        cuerpo: pieceData.cuerpo,
-        tramo: pieceData.tramo,
-        posicion: pieceData.posicion,
-        descripcion: pieceData.descripcion,
-        long_2_principal: pieceData.long_2_principal,
-        cantidad_x_torre: pieceData.cantidad_x_torre,
-        peso_unitario: pesoUnitario,
-        plano: pieceData.plano,
-        mod_plano: pieceData.mod_plano,
+        id_item: piece.ID_Item || '-',
+        descripcion: piece.Descripción || '-',
+        parte_division: piece['Parte (Division)'] || '-',
+        posicion: piece.Posición || '-',
         cantidad_original: cantidadOriginal,
         cantidad_calculada: cantidadCalculada,
-        peso_total: pesoTotal
+        peso_unitario: pesoUnitario,
+        peso_total: pesoTotal,
+        long_2_principal: piece['Long 2 (Principal)'] || '-'
       });
     }
   }

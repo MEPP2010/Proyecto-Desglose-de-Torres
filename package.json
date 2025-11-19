@@ -6,11 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "migrate": "node migrate-to-mongodb.js"
+    "lint": "next lint"
   },
   "dependencies": {
-    "mongodb": "^6.3.0",
+    "mongodb": "^7.0.0",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
