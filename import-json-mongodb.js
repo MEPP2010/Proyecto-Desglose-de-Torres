@@ -5,7 +5,7 @@ const { MongoClient } = require('mongodb');
 const fs = require('fs');
 
 // ==================== CONFIGURACIÓN ====================
-const MONGODB_URI = 'mongodb+srv://martinp_db:c51ObWgDOgN1KTOw@desglosetorres.js1iput.mongodb.net/torres?retryWrites=true&w=majority';
+const MONGODB_URI = 'mongodb+srv://martinp_db:<password>@desglosetorres.js1iput.mongodb.net/torres?retryWrites=true&w=majority';
 const DATABASE_NAME = 'torres';
 const COLLECTION_NAME = 'piezas';
 const JSON_FILE = 'desgloses_mongodb.json'; // Tu archivo JSON
