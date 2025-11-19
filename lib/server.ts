@@ -41,6 +41,7 @@ export interface Piece {
 
 export interface CalculatedPiece {
   id_item: string;
+  texto_breve: string;
   descripcion: string;
   parte_division: string;
   posicion: string;
@@ -239,6 +240,7 @@ export async function calculateMaterials(
       
       calculatedPieces.push({
         id_item: piece['ID Item'] || '-',
+        texto_breve: piece['Texto breve del material'] || '-',
         descripcion: piece.Descripción || '-',
         parte_division: piece['Parte (Division)'] || '-',
         posicion: piece.Posición || '-',
