@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 interface CalculatedPiece {
   id_item: string;
+  texto_breve: string;
   descripcion: string;
   parte_division: string;
   posicion: string;
