@@ -202,6 +202,7 @@ export default function CalculadoraPage() {
     results.forEach(piece => {
       const row = [
         piece.id_item || '-',
+        piece.texto_breve || '-',
         piece.descripcion || '-',
         piece.parte_division || '-',
         piece.posicion || '-',
