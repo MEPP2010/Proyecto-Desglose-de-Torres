@@ -300,7 +300,7 @@ export default function CalculadoraPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white sticky top-0 z-10">
                   <tr>
-                    {['Material', 'Descripción', 'Parte', 'Posición', 'Cant. Original', 'Cant. Calculada', 'Peso Unit. (kg)', 'Peso Total (kg)', 'Long 2'].map(h => (
+                    {['Material', 'Texto Breve', 'Descripción', 'Parte', 'Posición', 'Cant. Original', 'Cant. Calculada', 'Peso Unit. (kg)', 'Peso Total (kg)', 'Long 2'].map(h => (
                       <th key={h} className="px-3 py-3 text-left font-semibold">{h}</th>
                     ))}
                   </tr>
@@ -309,6 +309,7 @@ export default function CalculadoraPage() {
                   {results.map((piece, idx) => (
                     <tr key={idx} className="border-b border-[#e9ecef] hover:bg-[#f8f9fa]">
                       <td className="px-3 py-2">{piece.id_item || '-'}</td>
+                      <td className="px-3 py-2">{piece.texto_breve || '-'}</td>
                       <td className="px-3 py-2">{piece.descripcion || '-'}</td>
                       <td className="px-3 py-2">{piece.parte_division || '-'}</td>
                       <td className="px-3 py-2">{piece.posicion || '-'}</td>
