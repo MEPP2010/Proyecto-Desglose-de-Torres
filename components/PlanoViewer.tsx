@@ -38,7 +38,7 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newScale = Math.max(0.5, Math.min(5, scale * delta));
+    const newScale = Math.max(0.23, Math.min(5, scale * delta));
     setScale(newScale);
   };
 
@@ -70,7 +70,7 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
   };
 
   const handleZoomOut = () => {
-    setScale(prev => Math.max(0.5, prev / 1.2));
+    setScale(prev => Math.max(0.23, prev / 1.2));
   };
 
   const handleReset = () => {
@@ -122,59 +122,100 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
       {/* Header con controles */}
-      <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h3 className="text-xl font-bold">📐 {planoName || 'Plano'}</h3>
-          <span className="text-sm text-gray-400">Zoom: {Math.round(scale * 100)}%</span>
+      <div className="bg-gray-800 text-white p-2 sm:p-4">
+        {/* Título y zoom */}
+        <div className="flex justify-between items-center mb-2 sm:mb-0">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm sm:text-xl font-bold truncate">📐 {planoName || 'Plano'}</h3>
+            <span className="text-xs sm:text-sm text-gray-400 hidden sm:inline">Zoom: {Math.round(scale * 100)}%</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition font-bold text-sm sm:text-base ml-2 flex-shrink-0 sm:hidden"
+            title="Cerrar (Esc)"
+          >
+            ✕
+          </button>
         </div>
-        
-        <div className="flex gap-2">
-          {/* Controles de zoom */}
+
+        {/* Controles - Desktop */}
+        <div className="hidden sm:flex gap-2 mt-2">
           <button
             onClick={handleZoomOut}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition"
-            title="Alejar (Scroll down)"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition text-sm"
+            title="Alejar"
           >
             🔍−
           </button>
           <button
             onClick={handleZoomIn}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition"
-            title="Acercar (Scroll up)"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition text-sm"
+            title="Acercar"
           >
             🔍+
           </button>
           <button
             onClick={handleReset}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition"
-            title="Restablecer vista"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition text-sm"
+            title="Restablecer"
           >
             ↺ Reset
           </button>
           <button
             onClick={handleFitToScreen}
-            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition"
-            title="Ajustar a pantalla"
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition text-sm"
+            title="Ajustar"
           >
             ⛶ Ajustar
           </button>
-          
           <div className="border-l border-gray-600 mx-2"></div>
-          
-          {/* Controles adicionales */}
           <button
             onClick={handleDownload}
-            className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded transition"
-            title="Descargar plano"
+            className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded transition text-sm"
+            title="Descargar"
           >
             💾 Descargar
           </button>
           <button
             onClick={onClose}
-            className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition font-bold"
+            className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition font-bold text-sm"
             title="Cerrar (Esc)"
           >
             ✕ Cerrar
+          </button>
+        </div>
+
+        {/* Controles - Mobile */}
+        <div className="flex sm:hidden gap-2 mt-2 overflow-x-auto pb-1">
+          <button
+            onClick={handleZoomOut}
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition text-sm flex-shrink-0"
+          >
+            🔍−
+          </button>
+          <button
+            onClick={handleZoomIn}
+            className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded transition text-sm flex-shrink-0"
+          >
+            🔍+
+          </button>
+          <button
+            onClick={handleReset}
+            className="bg-gray-700 hover:bg-gray-600 px-2 py-2 rounded transition text-sm flex-shrink-0"
+          >
+            ↺
+          </button>
+          <button
+            onClick={handleFitToScreen}
+            className="bg-gray-700 hover:bg-gray-600 px-2 py-2 rounded transition text-sm flex-shrink-0"
+          >
+            ⛶
+          </button>
+          <button
+            onClick={handleDownload}
+            className="bg-blue-600 hover:bg-blue-700 px-2 py-2 rounded transition text-sm flex-shrink-0"
+          >
+            💾
           </button>
         </div>
       </div>
