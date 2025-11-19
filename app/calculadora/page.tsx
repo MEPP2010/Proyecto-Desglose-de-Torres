@@ -228,7 +228,7 @@ export default function CalculadoraPage() {
       return;
     }
     
-    const planoUrl = `/planos/${plano}`;
+    const planoUrl = `/planos/${plano}.jpg`;
     const planoTitle = `${itemId} - ${plano}${modPlano && modPlano !== '-' ? ` (Mod: ${modPlano})` : ''}`;
     
     openViewer(planoUrl, planoTitle);

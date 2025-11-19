@@ -15,7 +15,9 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   // Resetear cuando cambia la imagen
   useEffect(() => {
@@ -23,7 +25,15 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
     setPosition({ x: 0, y: 0 });
     setIsLoading(true);
     setImageError(false);
+    setImageSize({ width: 0, height: 0 });
   }, [planoUrl]);
+
+  // Ajustar automáticamente al cargar la imagen
+  useEffect(() => {
+    if (imageSize.width > 0 && imageSize.height > 0 && containerRef.current) {
+      fitImageToScreen();
+    }
+  }, [imageSize]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -69,19 +79,32 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
   };
 
   const handleFitToScreen = () => {
-    if (containerRef.current) {
+    fitImageToScreen();
+  };
+
+  const fitImageToScreen = () => {
+    if (containerRef.current && imageSize.width > 0 && imageSize.height > 0) {
       const container = containerRef.current;
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
       
-      // Ajustar al 90% del contenedor para dejar margen
-      const scaleX = (containerWidth * 0.9) / 1920; // Asumiendo imagen de ~1920px
-      const scaleY = (containerHeight * 0.9) / 1080; // Asumiendo imagen de ~1080px
-      const newScale = Math.min(scaleX, scaleY, 1);
+      // Calcular el scale necesario para ajustar la imagen al contenedor
+      const scaleX = (containerWidth * 0.95) / imageSize.width;
+      const scaleY = (containerHeight * 0.95) / imageSize.height;
+      const newScale = Math.min(scaleX, scaleY);
       
       setScale(newScale);
       setPosition({ x: 0, y: 0 });
     }
+  };
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setImageSize({
+      width: img.naturalWidth,
+      height: img.naturalHeight
+    });
+    setIsLoading(false);
   };
 
   const handleRotate = () => {
@@ -201,11 +224,12 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
           }}
         >
           <img
+            ref={imageRef}
             src={planoUrl}
             alt={planoName}
             className="max-w-none select-none"
             draggable={false}
-            onLoad={() => setIsLoading(false)}
+            onLoad={handleImageLoad}
             onError={() => {
               setIsLoading(false);
               setImageError(true);
@@ -230,7 +254,9 @@ export default function PlanoViewer({ planoUrl, planoName, onClose }: PlanoViewe
       {/* Footer con información */}
       <div className="bg-gray-800 text-white text-sm p-2 text-center">
         <span className="text-gray-400">
-          Posición: X: {Math.round(position.x)}px, Y: {Math.round(position.y)}px
+          Zoom: {Math.round(scale * 100)}% | 
+          Posición: X: {Math.round(position.x)}px, Y: {Math.round(position.y)}px | 
+          Dimensiones: {imageSize.width} × {imageSize.height} px
         </span>
       </div>
     </div>
