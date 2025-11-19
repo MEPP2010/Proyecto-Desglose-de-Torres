@@ -40,6 +40,11 @@ export default function BuscadorPage() {
     cuerpo: '',
     tramo: ''
   });
+
+  const[selectedPlano, setSelectedPlano] = useState<string | null>(null);
+
+  const handlePlanoClick = (planoName: string) => {
+    setSelectedPlano(planoName);
   
   const [options, setOptions] = useState<FilterOptions>({
     TIPO: [],
@@ -222,15 +227,81 @@ export default function BuscadorPage() {
                   </td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.plano || '-'}</td>
                   <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.mod_plano || '-'}</td>
+                
+
+                <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">
+                  {piece.plano ? (
+                    <button
+                      onClick={() => handlePlanoClick(piece.plano)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {piece.plano}
+                    </button>
+                  ) : (
+                    '-'
+                  )}    
+                </td>
+
+                <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-800">{piece.mod_plano || '-'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {selectedPlano && (
+          <PlanoViewer
+            planoName={selectedPlano}
+            onClose={() => setSelectedPlano(null)}
+          />
+        )}
       </div>
     </div>
   );
 }
+
+function PlanoViewer({ planoName, onClose }: { planoName: string; onClose: () => void }) {
+  const imageUrl = `/planos/${(planoName)}.png`;
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-2xl p-4 w-full max-w-4xl h-5/6 flex flex-col"
+        onClick={(e) => e.stopPropagation()} // Evita cerrar al hacer clic dentro
+      >
+        <div className="flex justify-between items-center border-b pb-2 mb-2">
+          <h2 className="text-xl font-bold">Visualizador de Plano: {planoName}</h2>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            &times;
+          </button>
+        </div>
+        
+        {/* Contenedor de la imagen con desplazamiento y zoom (simple) */}
+        <div className="flex-1 overflow-auto cursor-move relative">
+            <img 
+              src={imageUrl} 
+              alt={`Plano ${planoName}`}
+              // Puedes implementar una librería de zoom más avanzada aquí (ej: react-draggable, react-zoom-pan-pinch)
+              // Por ahora, solo permite el desplazamiento (overflow: auto) si la imagen es grande.
+              className="w-full h-auto object-contain" // Cambia a w-auto para imágenes grandes
+              style={{ minWidth: '100%', minHeight: '100%' }} // Fuerza la imagen a ser grande para el scroll
+              draggable="false"
+            />
+        </div>
+        
+        <p className="text-sm text-center mt-2 text-gray-500">
+          * Para zoom y movimiento más avanzados, se recomienda una librería externa (p. ej., 'react-zoom-pan-pinch').
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
 function FilterSelect({ label, value, options, onChange, placeholder }: {
   label: string;
@@ -254,4 +325,5 @@ function FilterSelect({ label, value, options, onChange, placeholder }: {
       </select>
     </div>
   );
+}
 }
