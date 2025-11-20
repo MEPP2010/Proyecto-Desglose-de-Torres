@@ -2,49 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --isa-blue: #003594;
+  --isa-orange: #ff6600;
+}
+
 body {
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f7f6;
+  background-color: var(--isa-blue);
+  color: white;
   margin: 0;
   padding: 0;
+  /* Previene scroll horizontal indeseado por imágenes absolutas */
+  overflow-x: hidden;
 }
 
-/* Estilo para los <select> con flecha personalizada */
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 0.65em;
-  padding-right: 2.5rem;
-  background-color: white;
-}
-
-/* Fix para tablas con sticky header */
-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-/* Scrollbar personalizado */
+/* Personalización de scrollbar para que combine con el fondo azul */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Utilidades para inputs y selects en modo oscuro/azul */
+select, input {
+  color: #1f2937; /* Texto oscuro para legibilidad en inputs blancos */
+}
+
+/* Animación suave para las mariposas */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
