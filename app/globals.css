@@ -10,11 +10,10 @@
 body {
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--isa-blue);
-  color: white;
+  color: rgb(255, 255, 255);
   margin: 0;
   padding: 0;
-  /* Previene scroll horizontal indeseado por imágenes absolutas */
-  overflow-x: hidden;
+
 }
 
 /* Personalización de scrollbar para que combine con el fondo azul */
@@ -29,12 +28,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(114, 114, 114, 0.5);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(114, 114, 114, 0.8);
 }
 
 /* Utilidades para inputs y selects en modo oscuro/azul */
