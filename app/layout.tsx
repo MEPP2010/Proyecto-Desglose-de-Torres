@@ -5,6 +5,11 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Desglose de Torres - ISA Transelca',
   description: 'Sistema de búsqueda y cálculo de materiales para torres',
+  icons: {
+    icon: '/icon.png', // o '/logo.png'
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png', // Opcional para iOS
+  },
 }
 
 export default function RootLayout({
