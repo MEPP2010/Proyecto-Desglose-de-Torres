@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import PlanoViewer, { usePlanoViewer } from '@/components/PlanoViewer';
 
 // --- Interfaces ---
 
@@ -30,65 +31,6 @@ interface SelectedPart {
   part: string;
   quantity: number;
   selected: boolean;
-}
-
-// --- Componentes Auxiliares Integrados (Para evitar errores de importación) ---
-
-function PlanoViewer({ planoUrl, planoName, onClose }: { planoUrl: string, planoName: string, onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scaleIn" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-bold text-[#003594] flex items-center gap-2">
-            <span>📐</span> {planoName}
-          </h3>
-          <button 
-            onClick={onClose} 
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors font-bold"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="flex-1 overflow-auto p-4 bg-[#f0f2f5] flex justify-center items-center relative">
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 opacity-10">
-            <span className="text-6xl">🏗️</span>
-          </div>
-          <img 
-            src={planoUrl} 
-            alt={planoName} 
-            className="max-w-full h-auto shadow-lg border border-gray-300 bg-white relative z-10"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement!.innerHTML += '<div class="text-center p-10 text-gray-500 bg-white rounded shadow">⚠️ No se pudo cargar la imagen del plano.<br><small>Verifica que el archivo exista en /public/planos/</small></div>';
-            }}
-          />
-        </div>
-        <div className="p-3 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-500">
-          Presiona ESC o haz clic fuera para cerrar
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function usePlanoViewer() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [planoUrl, setPlanoUrl] = useState('');
-  const [planoName, setPlanoName] = useState('');
-
-  const openViewer = (url: string, name: string) => {
-    setPlanoUrl(url);
-    setPlanoName(name);
-    setIsOpen(true);
-  };
-
-  const closeViewer = () => {
-    setIsOpen(false);
-    setPlanoUrl('');
-    setPlanoName('');
-  };
-
-  return { isOpen, planoUrl, planoName, openViewer, closeViewer };
 }
 
 // --- Componente Principal ---
@@ -306,39 +248,101 @@ export default function CalculadoraPage() {
     setTimeout(() => loadOptions(), 0);
   };
 
-  const exportToCSV = () => {
-    if (results.length === 0) {
-      showModal('⚠️ No hay datos para exportar');
-      return;
-    }
+  const exportToExcel = () => {
+  if (results.length === 0) {
+    showModal('⚠️ No hay datos para exportar');
+    return;
+  }
 
-    let csv = 'Material,Descripción,Parte,Posición,Cant. Original,Cant. Calculada,Peso Unit.,Peso Total,Long 2,Plano,Mod Plano\n';
-    
-    results.forEach(piece => {
-      const row = [
-        piece.id_item || '-',
-        piece.texto_breve || '-',
-        piece.descripcion || '-',
-        piece.parte_division || '-',
-        piece.posicion || '-',
-        piece.cantidad_original || 0,
-        piece.cantidad_calculada || 0,
-        (piece.peso_unitario || 0).toFixed(2),
-        (piece.peso_total || 0).toFixed(2),
-        piece.long_2_principal || '-',
-        piece.plano || '-',
-        piece.mod_plano || '-'
-      ].map(v => `"${v}"`).join(',');
-      csv += row + '\n';
-    });
+    let html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <!--[if gte mso 9]>
+      <xml>
+        <x:ExcelWorkbook>
+          <x:ExcelWorksheets>
+            <x:ExcelWorksheet>
+              <x:Name>Materiales Torre</x:Name>
+              <x:WorksheetOptions>
+                <x:DisplayGridlines/>
+              </x:WorksheetOptions>
+            </x:ExcelWorksheet>
+          </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+      </xml>
+      <![endif]-->
+      <style>
+        table { border-collapse: collapse; width: 100%; }
+        th { background-color: #003594; color: white; font-weight: bold; border: 1px solid #000; padding: 8px; }
+        td { border: 1px solid #ccc; padding: 6px; }
+        .number { text-align: right; }
+      </style>
+    </head>
+    <body>
+      <table>
+        <thead>
+          <tr>
+            <th>Material</th>
+            <th>Texto Breve</th>
+            <th>Descripción</th>
+            <th>Parte</th>
+            <th>Posición</th>
+            <th>Cant. Original</th>
+            <th>Cant. Calculada</th>
+            <th>Peso Unitario</th>
+            <th>Peso Total</th>
+            <th>Long 2</th>
+            <th>Plano</th>
+            <th>Mod Plano</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  results.forEach(piece => {
+    html += `
+      <tr>
+        <td>${piece.id_item || '-'}</td>
+        <td>${piece.texto_breve || '-'}</td>
+        <td>${piece.descripcion || '-'}</td>
+        <td>${piece.parte_division || '-'}</td>
+        <td>${piece.posicion || '-'}</td>
+        <td class="number">${piece.cantidad_original || 0}</td>
+        <td class="number">${piece.cantidad_calculada || 0}</td>
+        <td class="number">${(piece.peso_unitario || 0).toFixed(2)}</td>
+        <td class="number">${(piece.peso_total || 0).toFixed(2)}</td>
+        <td>${piece.long_2_principal || '-'}</td>
+        <td>${piece.plano || '-'}</td>
+        <td>${piece.mod_plano || '-'}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="6" style="text-align: right; font-weight: bold;">TOTALES:</td>
+            <td class="number" style="font-weight: bold; background-color: #fff3e0;">${Math.round(totals.total_pieces)}</td>
+            <td></td>
+            <td class="number" style="font-weight: bold; background-color: #fff3e0;">${totals.total_weight.toFixed(2)} kg</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </body>
+    </html>
+  `;
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `materiales_torre_${Date.now()}.csv`;
-    link.click();
-  };
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `materiales_torre_${new Date().toISOString().split('T')[0]}.xls`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
 
   const showModal = (msg: string) => {
     alert(msg);
@@ -495,13 +499,13 @@ export default function CalculadoraPage() {
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-2 text-green-800">
                 <span>💾</span>
-                <span className="font-medium">¿Listo para usar estos datos? Descarga el reporte completo.</span>
+                <span className="font-medium">¿Listo para usar estos datos? Descarga el reporte completo en Excel.</span>
               </div>
               <button 
-                onClick={exportToCSV} 
+                onClick={exportToExcel} 
                 className="bg-[#28a745] hover:bg-[#218838] text-white px-6 py-2 rounded-lg font-bold shadow-sm transition-colors flex items-center gap-2"
               >
-                <span>📥</span> Exportar a CSV
+                <span>📥</span> Exportar a Excel
               </button>
             </div>
           </div>
